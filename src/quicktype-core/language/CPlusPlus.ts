@@ -2156,11 +2156,7 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
         }
 
         if (!this._options.justTypes) {
-            let namespaces = ["nlohmann"];
-            if (this._options.msbuildPermissive) {
-                namespaces = ["nlohmann", "detail"];
-            }
-            this.emitNamespaces(namespaces, () => {
+            this.emitNamespaces(this._namespaceNames, () => {
                 this.forEachObject("leading-and-interposing", (_: any, className: Name) =>
                     this.emitClassHeaders(className)
                 );
