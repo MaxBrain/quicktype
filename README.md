@@ -1,3 +1,9 @@
+### Differences between fork and main branch
+
+- Add `-include-file` command-line parameter for `C++` generator to provade any path of `json.hpp`, not only `json.hpp` and `3rdParty/json.hpp`
+- Move `to_json`/`from_json` functions from `nlohmann`/`nlohmann::details` namespace to class namespace, as described [in the documentation](https://github.com/nlohmann/json#basic-usage)
+
+
 ![](https://raw.githubusercontent.com/quicktype/quicktype/master/quicktype-logo.svg?sanitize=true)
 
 [![npm version](https://badge.fury.io/js/quicktype.svg)](https://badge.fury.io/js/quicktype)
