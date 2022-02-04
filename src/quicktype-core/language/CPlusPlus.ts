@@ -54,6 +54,12 @@ export const cPlusPlusOptions = {
         "local-include",
         "secondary"
     ),
+    includeFile: new StringOption(
+        "include-file",
+        "Path to json.hpp for non 'json.hpp' and 'nlohmann/json.hpp'",
+        "NAME",
+        "",
+    ),
     codeFormat: new EnumOption(
         "code-format",
         "Generate classes with getters/setters, instead of structs",
@@ -125,6 +131,7 @@ export class CPlusPlusTargetLanguage extends TargetLanguage {
             cPlusPlusOptions.westConst,
             cPlusPlusOptions.typeSourceStyle,
             cPlusPlusOptions.includeLocation,
+            cPlusPlusOptions.includeFile,
             cPlusPlusOptions.typeNamingStyle,
             cPlusPlusOptions.memberNamingStyle,
             cPlusPlusOptions.enumeratorNamingStyle,
@@ -713,10 +720,14 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
             }
         }
         if (!this._options.justTypes) {
-            if (!this._options.includeLocation) {
-                this.emitInclude(true, "nlohmann/json.hpp");
+            if (this._options.includeFile == "") {
+                if (!this._options.includeLocation) {
+                    this.emitInclude(true, "nlohmann/json.hpp");
+                } else {
+                    this.emitInclude(false, "json.hpp");
+                }
             } else {
-                this.emitInclude(false, "json.hpp");
+                this.emitInclude(false, this._options.includeFile);
             }
 
             if (includeHelper && !this._options.typeSourceStyle) {
