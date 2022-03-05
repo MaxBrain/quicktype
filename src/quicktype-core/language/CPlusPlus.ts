@@ -60,6 +60,18 @@ export const cPlusPlusOptions = {
         "NAME",
         "",
     ),
+    errorLog: new StringOption(
+        "error-log",
+        "Function for logging of enum errors",
+        "NAME",
+        "",
+    ),
+    logHeader: new StringOption(
+        "log-header",
+        "header with logger functions",
+        "NAME",
+        "",
+    ),
     codeFormat: new EnumOption(
         "code-format",
         "Generate classes with getters/setters, instead of structs",
@@ -132,6 +144,8 @@ export class CPlusPlusTargetLanguage extends TargetLanguage {
             cPlusPlusOptions.typeSourceStyle,
             cPlusPlusOptions.includeLocation,
             cPlusPlusOptions.includeFile,
+            cPlusPlusOptions.errorLog,
+            cPlusPlusOptions.logHeader,
             cPlusPlusOptions.typeNamingStyle,
             cPlusPlusOptions.memberNamingStyle,
             cPlusPlusOptions.enumeratorNamingStyle,
@@ -733,6 +747,9 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
             if (includeHelper && !this._options.typeSourceStyle) {
                 this.emitInclude(false, "helper.hpp");
             }
+        }
+        if (this._options.logHeader != "") {
+            this.emitInclude(false, this._options.logHeader);
         }
         this.ensureBlankLine();
     }
@@ -1585,7 +1602,11 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
                     });
                     i++;
                 }
-                this.emitLine('default: throw "Input JSON does not conform to schema";');
+                if (this._options.errorLog == "") {
+                    this.emitLine('default: throw "Input JSON does not conform to schema";');
+                } else {
+                    this.emitLine('default: ', this._options.errorLog, '(("Fail to parse json value " + j.dump() + " to ', variantType, '\\n").c_str()); break;');
+                }
             });
         });
     }
@@ -1635,28 +1656,36 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
                         this.emitLine("x = iter->second;");
                     });
                 } else {
-                    let onFirst = true;
+                    if (this._options.errorLog == "") {
+                        this.emitLine('if (!j.is_string()) throw "json object " + j.dump() + " is not string. Can not parse ', enumName, '";');
+                    } else {
+                        this.emitBlock(['if (!j.is_string()) '], true, () => {
+                            this.emitLine(this._options.errorLog, '(("Fail to parse json value " + j.dump() + " to ', enumName, '\\n").c_str());');
+                            this.emitLine('return;');
+                        });
+                    }
                     this.forEachEnumCase(e, "none", (name, jsonName) => {
-                        const maybeElse = onFirst ? "" : "else ";
                         this.emitLine(
-                            maybeElse,
-                            "if (j == ",
+                            "if (j.get<std::string>() == ",
                             this._stringType.wrapEncodingChange(
                                 [ourQualifier],
                                 this._stringType.getType(),
                                 this.NarrowString.getType(),
                                 [this._stringType.createStringLiteral([stringEscape(jsonName)])]
                             ),
-                            ") x = ",
+                            ") { x = ",
                             ourQualifier,
                             enumName,
                             "::",
                             name,
-                            ";"
+                            "; return; }"
                         );
-                        onFirst = false;
                     });
-                    this.emitLine('else throw "Input JSON does not conform to schema";');
+                    if (this._options.errorLog == "") {
+                        this.emitLine('throw "Input JSON does not conform to schema";');
+                    } else {
+                        this.emitLine(this._options.errorLog, '(("Fail to parse json value " + j.dump() + " to ', enumName, '\\n").c_str());');
+                    }
                 }
         });
         this.ensureBlankLine();
@@ -1682,7 +1711,12 @@ export class CPlusPlusRenderer extends ConvenienceRenderer {
                         "; break;"
                     );
                 });
-                this.emitLine('default: throw "This should not happen";');
+                if (this._options.errorLog == "") {
+                    this.emitLine('default: throw "This should not happen";');
+                } else {
+                    this.emitLine('default: ', this._options.errorLog, '("Can not dump value [%d] as ', this._stringType.getType(), '\\n", static_cast<int>(x)); break;');
+                }
+                
             });
         });
     }

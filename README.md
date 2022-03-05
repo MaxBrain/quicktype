@@ -1,7 +1,10 @@
 ### Differences between fork and main branch
 
-- Add `-include-file` command-line parameter for `C++` generator to provade any path of `json.hpp`, not only `json.hpp` and `3rdParty/json.hpp`
+- Add `--include-file` command-line parameter for `C++` generator to provide any path of `json.hpp`, not only `json.hpp` and `3rdParty/json.hpp`
+- Add '--error-log' command-line parameter for `C++` generator to use some printf-like function instead throw on enum parse error
+- Add '--log-header' command-line parameter for `C++` generator for header with log function
 - Move `to_json`/`from_json` functions from `nlohmann`/`nlohmann::details` namespace to class namespace, as described [in the documentation](https://github.com/nlohmann/json#basic-usage)
+- Extra messages and checks on json parsing
 
 
 ![](https://raw.githubusercontent.com/quicktype/quicktype/master/quicktype-logo.svg?sanitize=true)
